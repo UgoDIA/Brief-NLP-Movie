@@ -40,7 +40,7 @@ jobs:
         with:
           name: python-app
           path: |
-            release.zip
+            backend/src/release.zip
             !venv/
 
   deploy:
