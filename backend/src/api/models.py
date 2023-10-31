@@ -3,6 +3,7 @@ from django.db import models
 
 class Movies(models.Model):
     id_movie = models.IntegerField(primary_key=True)
+    movie_title = models.CharField(max_length=200,blank=True, null=True)
     movie_rank = models.IntegerField()
     movie_score_press = models.DecimalField(max_digits=2, decimal_places=1)
     movie_score_spectator = models.DecimalField(max_digits=2, decimal_places=1)
