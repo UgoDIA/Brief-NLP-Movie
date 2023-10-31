@@ -55,6 +55,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: python-app
+          path: backend/src
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
@@ -63,7 +64,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          local-dir: ./backend/src/
           app-name: 'nlp-movies'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_37841AB5685D485FAE91FF587FB83A7B }}
