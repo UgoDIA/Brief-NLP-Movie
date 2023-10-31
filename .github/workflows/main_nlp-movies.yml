@@ -32,15 +32,15 @@ jobs:
         run: pip install -r backend/requirements.txt
 
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-      - name: Zip artifact for deployment
-        run: zip release.zip ./backend/src/* -r
+      # - name: Zip artifact for deployment
+      #   run: zip release.zip ./backend/src/* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v3
         with:
           name: python-app
           path: |
-            release.zip
+            backend/src/
             !venv/
 
   deploy:
@@ -57,8 +57,8 @@ jobs:
           name: python-app
           path: backend/src
 
-      - name: Unzip artifact for deployment
-        run: unzip backend/src/release.zip
+      # - name: Unzip artifact for deployment
+      #   run: unzip backend/src/release.zip
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
