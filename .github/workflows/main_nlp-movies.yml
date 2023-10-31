@@ -24,7 +24,7 @@ jobs:
 
       - name: Create and start virtual environment
         run: |
-          cd backend/src
+          cd backend
           python -m venv venv
           source venv/bin/activate
 
@@ -55,10 +55,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: python-app
-          path: backend/src
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
+
+      - name: 'Navigate to Django app directory'
+        run: cd backend/src
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
