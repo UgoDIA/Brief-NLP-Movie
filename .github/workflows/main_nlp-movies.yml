@@ -58,7 +58,7 @@ jobs:
           path: backend/src
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: unzip backend/src/release.zip
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
