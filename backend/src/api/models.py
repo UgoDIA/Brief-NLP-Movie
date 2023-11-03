@@ -18,6 +18,7 @@ class Reviews(models.Model):
     id_review = models.AutoField(primary_key=True)
     review_score = models.DecimalField(max_digits=2, decimal_places=1)
     review_content = models.TextField(blank=True, null=True)
+    # polarity = models.IntegerField(blank=True, null=True)
     id_movie = models.ForeignKey(Movies, models.CASCADE, db_column='id_movie')
 
     class Meta:
