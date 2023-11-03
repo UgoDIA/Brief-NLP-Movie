@@ -21,4 +21,4 @@ class JoinSerialiser(serializers.ModelSerializer):
     # tk = json.dump(tokenizer(tokenized))
     class Meta:
         model = Reviews
-        fields = ["review_score", "review_content"]
+        fields = ["review_score", "review_content","id_review"]
