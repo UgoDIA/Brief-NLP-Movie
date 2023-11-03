@@ -20,5 +20,5 @@ from api.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('train-dataset/', getTrainDataset, name="train-dataset")
+    path('train-dataset/', generateTrainTest, name="train-dataset")
 ]

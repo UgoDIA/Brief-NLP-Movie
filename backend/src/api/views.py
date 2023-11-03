@@ -19,9 +19,9 @@ def nombre_items_du_pourcentage(total_items, pourcentage):
 
     return math.floor(nombre_items), math.floor(nombre_items_rest)
 
-# Create your views here.
+# @params percentTrain
 @api_view(['GET'])
-def getTrainDataset(request):
+def generateTrainTest(request):
     percentTrain = request.query_params.get('percentTrain')
 
     totalReviews = Reviews.objects.all().count()
