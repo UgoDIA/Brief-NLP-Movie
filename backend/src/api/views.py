@@ -57,7 +57,7 @@ def getTrainDataset(request):
 
     print("ok test dataframe")    
 
-    return JsonResponse({"trainset": Trainset, "testset": Testset},  safe=True)
+    return JsonResponse({"trainset": serializedTrainReview.data, "testset": serializedTestReview.data},  safe=True)
 
 
 from transformers import CamembertTokenizer
