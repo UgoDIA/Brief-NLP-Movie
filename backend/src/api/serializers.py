@@ -1,7 +1,7 @@
 from rest_framework import serializers
+from django.core import serializers as DJSerializer
 from api.models import Movies, Reviews
-
-
+from transformers import CamembertTokenizer
 
 class ReviewsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,7 +16,9 @@ class MoviesSerializer(serializers.ModelSerializer):
 
 class JoinSerialiser(serializers.ModelSerializer):
     id_movie = serializers.CharField(source="id_movie.movie_title")
+    tokenized = serializers.defaultdict(source="review_content")
 
+    # tk = json.dump(tokenizer(tokenized))
     class Meta:
         model = Reviews
         fields = "__all__"
