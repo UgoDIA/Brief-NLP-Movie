@@ -4,21 +4,31 @@ import psycopg2
 import os
 import dotenv
 import re
-import pandas as pd
 from sqlalchemy import create_engine
 dotenv.load_dotenv()
 
-db = {
-    "host": os.getenv("DBHOST"),
-    "database": os.getenv("DBNAME"),
-    "user": os.getenv("DBUSER"),
-    "password": os.getenv("DBPWD"),
-}
 
-engine = create_engine(f"postgresql+psycopg2://{db['user']}:{db['password']}@{db['host']}/{db['database']}")
+def insert_into_movies_table(id_film, title, ranking, presse_score, spectateurs_score):
+    connection = psycopg2.connect(
+        host=os.getenv("DBHOST"),
+        database=os.getenv("DBNAME"),
+        user=os.getenv("DBUSER"),
+        password=os.getenv("DBPWD"),
+    )
 
-df_movies = pd.DataFrame(columns=["id_movie", "movie_title", "movie_rank", "movie_score_press", "movie_score_spectator"])
-df_reviews = pd.DataFrame(columns=["review_score", "review_content", "id_movie"])
+    presse_score = presse_score.replace(',', '.')
+    spectateurs_score = spectateurs_score.replace(',', '.')
+
+    cursor = connection.cursor()
+
+    insert_query = "INSERT INTO movies (id_movie, movie_title, movie_rank, movie_score_press, movie_score_spectator) VALUES (%s, %s, %s, %s, %s);"
+
+    cursor.execute(insert_query, (id_film, title, ranking,
+                   presse_score, spectateurs_score))
+    connection.commit()
+    cursor.close()
+    connection.close()
+
 
 def scrape_movies_to_db(url):
     page = requests.get(url)
@@ -37,24 +47,18 @@ def scrape_movies_to_db(url):
         spectateurs_score = spectateurs_section.find_next(
             'span', class_='stareval-note')
         id_film = title['href'].split('_cfilm=')[1].split('.')[0]
-        
-        title = title.text.strip()
-        ranking = ranking.text.strip()
-        presse_score = presse_score.text.strip()
-        spectateurs_score = spectateurs_score.text.strip()
-        
-        presse_score = presse_score.replace(',', '.')
-        spectateurs_score = spectateurs_score.replace(',', '.')
-        
 
-        print("titre:",title)
-        print("rang:",ranking)
-        
-        df_movies.loc[len(df_movies)] = [id_film, title, ranking, presse_score, spectateurs_score]
-
+        # print("note presse:", presse_score.text.strip())
+        # print("note spectateurs:", spectateurs_score.text.strip())
+        print("titre:",title.text.strip())
+        print("rang:",ranking.text.strip())
+        # print("id_film:",id_film)
+        insert_into_movies_table(id_film, title.text.strip(), ranking.text.strip(
+        ), presse_score.text.strip(), spectateurs_score.text.strip())
         scrape_reviews(id_film)
-        
     print("fin")
+
+
 
 
 def scrape_reviews(id_movie):
@@ -64,6 +68,7 @@ def scrape_reviews(id_movie):
     first_soup = BeautifulSoup(first_page.content, "html.parser")
     
     last_page_element = first_soup.find('your-last-page-element')
+    
 
     last_page_element = first_soup.select('.pagination-item-holder span.item')[-1]
 
@@ -71,7 +76,7 @@ def scrape_reviews(id_movie):
         max_pages = int(last_page_element.text)
     else:
         max_pages = 10
-    max_pages = 1
+    max_pages = 10
     print('total pages:',max_pages)
     
     for page_num in range(1, max_pages + 1):
@@ -88,21 +93,37 @@ def scrape_reviews(id_movie):
             content_element = review.find('div', class_='content-txt')
             content = content_element.text.strip()
             content = content.replace('spoiler:', '')
+            # content = re.sub(r'\s{2,}', ' ', content)
             content = ' '.join(content.split())
-            score = score.replace(',', '.')
+            # print(f"Score: {score}")
+            # print(f"Content: {content}")
             
-            df_reviews.loc[len(df_reviews)] = [score, content, id_movie]   
 
-with engine.connect() as connection:
-    connection.execute("TRUNCATE movies RESTART IDENTITY CASCADE")
+            insert_into_reviews_table(score, content, id_movie)
+
+
+
+def insert_into_reviews_table(score, content, id_movie):
+    connection = psycopg2.connect(
+        host=os.getenv("DBHOST"),
+        database=os.getenv("DBNAME"),
+        user=os.getenv("DBUSER"),
+        password=os.getenv("DBPWD"),
+    )
+    score = score.replace(',', '.')
+
+    cursor = connection.cursor()
+
+    insert_query = "INSERT INTO reviews ( review_score, review_content,id_movie) VALUES (%s, %s, %s);"
+
+    cursor.execute(insert_query, (score, content, id_movie))
+    connection.commit()
+    cursor.close()
+    connection.close()
+    
 
 pages = 2
 for page_num in range(1, pages + 1):
     page_url = f"https://www.allocine.fr/film/meilleurs/?page={page_num}"
     scrape_movies_to_db(page_url)
     
-print(len(df_movies))
-print(len(df_reviews))
-    
-df_movies.to_sql('movies', engine, index=False, if_exists='append')
-df_reviews.to_sql('reviews', engine, index=False, if_exists='append')
