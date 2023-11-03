@@ -17,16 +17,15 @@ def nombre_items_du_pourcentage(total_items, pourcentage):
     reste = 100 - pourcentage
     nombre_items_rest = (reste / 100) * total_items
 
-    return nombre_items, nombre_items_rest
+    return math.floor(nombre_items), math.floor(nombre_items_rest)
 
 # Create your views here.
 @api_view(['GET'])
 def getTrainDataset(request):
     percentTrain = request.query_params.get('percentTrain')
 
-
-    totalMovie = Reviews.objects.all().count()
-    TrainSize, TestSize = nombre_items_du_pourcentage(total_items=totalMovie, pourcentage=percentTrain)
+    totalReviews = Reviews.objects.all().count()
+    TrainSize, TestSize = nombre_items_du_pourcentage(total_items=totalReviews, pourcentage=percentTrain)
 
     reviewsTrain = Reviews.objects.all()[0:TrainSize]
     serializedTrainReview = JoinSerialiser(reviewsTrain, many=True)
@@ -42,19 +41,21 @@ def getTrainDataset(request):
     Testset["tokenizedContent"] = []
     Testset["score"] = []
 
-    for review in serializedTrainReview.data:
-        Trainset["tokenizedContent"].append(review['review_content'])
-        Trainset["score"].append(math.floor(Decimal(review["review_score"])))
+    print("Total reviews:", totalReviews)
+    print("Train size:", TrainSize)
+    print("Test size:", TestSize)
 
-    for review in serializedTestReview.data:
-        Testset["tokenizedContent"].append(review['review_content'])
-        Testset["score"].append(math.floor(Decimal(review["review_score"])))
+    print("datas:", serializedTrainReview.data)
 
-    dataframeTrain = pd.DataFrame(Trainset)
-    dataframeTrain.to_csv("Trainset.csv")
+    dataframeTrain = pd.DataFrame(serializedTrainReview.data)
+    dataframeTrain.to_csv("Trainset.csv", index=False)
 
-    dataframeTrain = pd.DataFrame(Testset)
-    dataframeTrain.to_csv("Testset.csv")
+    print("ok train dataframe")    
+
+    dataframeTest = pd.DataFrame(serializedTestReview.data)
+    dataframeTest.to_csv("Testset.csv", index=False)
+
+    print("ok test dataframe")    
 
     return JsonResponse({"trainset": Trainset, "testset": Testset},  safe=True)
 
