@@ -1,3 +1,5 @@
+from api.serializers import ReviewToCSVSerialiser
+from api.models import Reviews
 from decimal import Decimal
 import numpy as np
 import math
@@ -30,4 +32,19 @@ def find_polarity(row):
         return 1
     else:
         return 0
-# Prepocessing Pipeline
+    
+def getTrainAndTestReviewFromDB(percentTrain):
+    totalReviews = Reviews.objects.all().count()
+    TrainSize, TestSize = nombre_items_du_pourcentage(total_items=totalReviews, pourcentage=percentTrain)
+
+    print("Train size:", TrainSize)
+    print("Test size:", TestSize)
+
+    reviewsTrain = Reviews.objects.all()[0:TrainSize]
+    serializedTrainReview = ReviewToCSVSerialiser(reviewsTrain, many=True)
+
+    reviewsTest = Reviews.objects.all().order_by('-id_review')[:TestSize]
+    serializedTestReview = ReviewToCSVSerialiser(reviewsTest, many=True)
+
+    print(serializedTestReview)
+    return serializedTrainReview.data, serializedTestReview.data, totalReviews

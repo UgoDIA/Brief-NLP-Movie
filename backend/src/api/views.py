@@ -1,68 +1,122 @@
-from api.models import *
+from transformers import TFCamembertForSequenceClassification
 from rest_framework.decorators import api_view
-from api.serializers import  JoinSerialiser
+from transformers import CamembertTokenizer
 from django.http import JsonResponse
+from api.models import *
+import tensorflow as tf
+import joblib as memory
 import pandas as pd
-import math
-from decimal import Decimal
+import numpy as np
 
-def nombre_items_du_pourcentage(total_items, pourcentage):
-    pourcentage = int(pourcentage)
-    total_items = int(total_items)
+from api.utils import *
 
-    if pourcentage < 0 or pourcentage > 100:
-        raise ValueError("Le pourcentage doit être compris entre 0 et 100.")
-    
-    nombre_items = (pourcentage / 100) * total_items
-    reste = 100 - pourcentage
-    nombre_items_rest = (reste / 100) * total_items
+MAX_SEQ_LEN = 400
+model_name = "camembert-base"
+tokenizer = CamembertTokenizer.from_pretrained(model_name)
+data_storage = "data/"
+model_storage = "data/models/"
 
-    return math.floor(nombre_items), math.floor(nombre_items_rest)
-
-# @params percentTrain
+# @request.query: percentTrain
 @api_view(['GET'])
 def generateTrainTest(request):
     percentTrain = request.query_params.get('percentTrain')
+    serializedTrainReview, serializedTestReview, totalsReview = getTrainAndTestReviewFromDB(percentTrain)
 
-    totalReviews = Reviews.objects.all().count()
-    TrainSize, TestSize = nombre_items_du_pourcentage(total_items=totalReviews, pourcentage=percentTrain)
+    print("total reviews:", totalsReview)
+    print('trainset size:', len(serializedTrainReview))
+    print('testset size:', len(serializedTestReview))
 
-    reviewsTrain = Reviews.objects.all()[0:TrainSize]
-    serializedTrainReview = JoinSerialiser(reviewsTrain, many=True)
+    dataframeTrain = pd.DataFrame(serializedTrainReview)
+    # dataframeTrain.assign(polarity=lambda row : find_polarity(row), axis=1)
+    dataframeTrain.loc[:,'polarity'] = dataframeTrain.apply(lambda row : find_polarity(row), axis=1)
+    #Create new column polarity & apply lambda function to each row 
+    dataframeTrain.to_csv(data_storage + "Trainset.csv", index=False)
+    
+    dataframeTest = pd.DataFrame(serializedTestReview)
+    dataframeTest.loc[:,'polarity'] = dataframeTrain.apply(lambda row : find_polarity(row), axis=1)
+    # dataframeTest.assign(polarity=lambda row : find_polarity(row), axis=1)
+    dataframeTest.to_csv(data_storage + "Testset.csv", index=False)
 
-    reviewsTest = Reviews.objects.all()[TrainSize:TestSize]
-    serializedTestReview = JoinSerialiser(reviewsTest, many=True)
-
-    Trainset = {}
-    Trainset["tokenizedContent"] = []
-    Trainset["score"] = []
-
-    Testset = {}
-    Testset["tokenizedContent"] = []
-    Testset["score"] = []
-
-    print("Total reviews:", totalReviews)
-    print("Train size:", TrainSize)
-    print("Test size:", TestSize)
-
-    print("datas:", serializedTrainReview.data)
-
-    dataframeTrain = pd.DataFrame(serializedTrainReview.data)
-    dataframeTrain.to_csv("Trainset.csv", index=False)
-
-    print("ok train dataframe")    
-
-    dataframeTest = pd.DataFrame(serializedTestReview.data)
-    dataframeTest.to_csv("Testset.csv", index=False)
-
-    print("ok test dataframe")    
-
-    return JsonResponse({"trainset": serializedTrainReview.data, "testset": serializedTestReview.data},  safe=True)
+    ProcessDatasets()
+    return JsonResponse({"trainset": serializedTrainReview, "testset": serializedTestReview},  safe=True)
 
 
-from transformers import CamembertTokenizer
-def tokenizer(review):
-    modelName = "camembert/camembert-large"
-    tokenizer = CamembertTokenizer.from_pretrained(modelName)
-    reviewContent = review['review_content']
-    return tokenizer.encode(reviewContent)
+def ProcessDatasets():
+    trainset = pd.read_csv(data_storage + 'Trainset.csv')
+    trainset["review_content"] = trainset["review_content"].replace(r'^s*$', float('NaN'), regex = True) 
+    trainset.dropna(inplace = True) 
+    print("PROCESS SHAPE Before encode:", trainset["review_content"].shape)
+
+    # guardrails for empty str reviews_content
+    trainReviews = np.array(trainset["review_content"][~trainset["review_content"].isna()])
+    labels_train  = np.array(trainset['review_score'])
+
+    print("PROCESS SHAPE:", trainReviews.shape, labels_train.shape)
+    encoded_train = encode_reviews(tokenizer, trainReviews, MAX_SEQ_LEN)
+    
+    memory.dump({
+        "encoded_train": encoded_train,
+        "labels_train": labels_train
+    }, data_storage + "encodedTrainset.z")
+
+    return JsonResponse({"message": "done"}, safe=True)
+
+@api_view(['GET'])
+def readTokenizedEncodedReviews(request):
+    datas = memory.load(data_storage + "encodedTrainset.z")
+    encoded_train = datas["encoded_train"]
+    labels = datas["labels_train"]
+    print("INFOS PRINT")
+    print(encoded_train["input_ids"].shape, encoded_train["attention_mask"].shape)
+    print(labels.shape)
+    print(datas)
+    return JsonResponse({"message": "done"})
+
+
+
+@api_view(['GET'])
+def compileModel(request):
+    model = TFCamembertForSequenceClassification.from_pretrained("jplu/tf-camembert-base")
+    opt = tf.keras.optimizers.Adam(learning_rate=5e-6, epsilon=1e-08)
+    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)    
+
+    model.compile(optimizer=opt, loss=loss_fn, metrics=['accuracy'])
+    memory.dump(model, model_storage + "compiledModel.z")
+    
+    # initial_weights = model.get_weights()
+    modelSummary = model.summary()
+    memory.dump(modelSummary, model_storage + "modelSummary.z")
+
+    return JsonResponse({"message": "done"})
+
+
+@api_view(['GET'])
+def TrainModel(request):
+    print("Train model")
+    # Todo: Bug here
+    # model = memory.load('compiledModel.z')
+
+    encodedDatasets = memory.load(data_storage + "encodedTrainset.z")
+    reviews = encodedDatasets["encoded_train"]
+    labels  = encodedDatasets["labels_train"]
+
+
+    model = TFCamembertForSequenceClassification.from_pretrained("jplu/tf-camembert-base")
+
+    opt = tf.keras.optimizers.Adam(learning_rate=5e-6, epsilon=1e-08)
+    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)    
+
+    model.compile(optimizer=opt, loss=loss_fn, metrics=['accuracy'])
+
+    # ! REVIEW to get test & validation sets
+    # history = model.fit(
+    #     reviews, labels, epochs=1, batch_size=4, 
+    #     validation_data=(encoded_valid, y_val), verbose=1
+    # )
+
+    print('review to train:', reviews["input_ids"].shape, reviews["attention_mask"].shape)
+    print('labels on train:', labels.shape)
+
+    history = model.fit(reviews, labels, epochs=1, batch_size=4, verbose=1)
+    memory.dump(history, model_storage + "history.z")
+    return JsonResponse({"message": "done"})

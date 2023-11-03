@@ -14,11 +14,6 @@ class MoviesSerializer(serializers.ModelSerializer):
         model = Movies
         fields ="__all__"
 
-class JoinSerialiser(serializers.ModelSerializer):
-    # id_movie = serializers.CharField(source="id_movie.movie_title")
-    # tokenized = serializers.defaultdict(source="review_content")
-
-    # tk = json.dump(tokenizer(tokenized))
     class Meta:
         model = Reviews
         fields = ["review_score", "review_content","id_review"]

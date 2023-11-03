@@ -20,5 +20,9 @@ from api.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('train-dataset/', generateTrainTest, name="train-dataset")
+    path('train-model/', TrainModel, name="train-model"),
+    path('compile-model/', compileModel, name="compile-model"),
+    path('generate-dataset/', generateTrainTest, name="generate-dataset"),
+    path('process-dataset/', ProcessDatasets, name="process-dataset"),
+    path('read-tokenized-reviews/', readTokenizedEncodedReviews, name="read-tokenized-reviews")
 ]
