@@ -14,6 +14,7 @@ class MoviesSerializer(serializers.ModelSerializer):
         model = Movies
         fields ="__all__"
 
+class ReviewToCSVSerialiser(serializers.ModelSerializer):
     class Meta:
         model = Reviews
         fields = ["review_score", "review_content","id_review"]
