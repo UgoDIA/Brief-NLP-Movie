@@ -34,7 +34,6 @@ def generateTrainTest(request):
     
     dataframeTest = pd.DataFrame(serializedTestReview)
     dataframeTest.loc[:,'polarity'] = dataframeTrain.apply(lambda row : find_polarity(row), axis=1)
-    # dataframeTest.assign(polarity=lambda row : find_polarity(row), axis=1)
     dataframeTest.to_csv(data_storage + "Testset.csv", index=False)
 
     ProcessDatasets()
@@ -42,6 +41,7 @@ def generateTrainTest(request):
 
 
 def ProcessDatasets():
+    # TODO: same for testset
     trainset = pd.read_csv(data_storage + 'Trainset.csv')
     trainset["review_content"] = trainset["review_content"].replace(r'^s*$', float('NaN'), regex = True) 
     trainset.dropna(inplace = True) 
@@ -49,7 +49,7 @@ def ProcessDatasets():
 
     # guardrails for empty str reviews_content
     trainReviews = np.array(trainset["review_content"][~trainset["review_content"].isna()])
-    labels_train  = np.array(trainset['review_score'])
+    labels_train  = np.array(trainset['polarity'])
 
     print("PROCESS SHAPE:", trainReviews.shape, labels_train.shape)
     encoded_train = encode_reviews(tokenizer, trainReviews, MAX_SEQ_LEN)
@@ -94,9 +94,11 @@ def compileModel(request):
 def TrainModel(request):
     print("Train model")
     # Todo: Bug here
-    # model = memory.load('compiledModel.z')
+    # model = memory.load(model_storage + 'compiledModel.z')
 
     encodedDatasets = memory.load(data_storage + "encodedTrainset.z")
+    print(encodedDatasets)
+
     reviews = encodedDatasets["encoded_train"]
     labels  = encodedDatasets["labels_train"]
 

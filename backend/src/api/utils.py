@@ -26,12 +26,10 @@ def encode_reviews(tokenizer, reviews, max_length):
     return {"input_ids": token_ids, "attention_mask": attention_mask}
 
 def find_polarity(row):
-    if Decimal(row['review_score']) <= 2.0:
-        return -1
-    elif Decimal(row['review_score']) >= 4.0:
-        return 1
-    else:
+    if Decimal(row['review_score']) <= 3.0:
         return 0
+    else:
+        return 1
     
 def getTrainAndTestReviewFromDB(percentTrain):
     totalReviews = Reviews.objects.all().count()
