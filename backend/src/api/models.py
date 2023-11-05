@@ -23,3 +23,11 @@ class Reviews(models.Model):
 
     class Meta:
         db_table = 'reviews'
+
+
+class Predicted(models.Model):
+    predicted_score = models.DecimalField(max_digits=2, decimal_places=1)
+    id_review = models.ForeignKey(Reviews, models.CASCADE, db_column="id_review")
+
+    class Meta:
+        db_table = 'prections'

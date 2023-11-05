@@ -102,7 +102,6 @@ def TrainModel(request):
     reviews = encodedDatasets["encoded_train"]
     labels  = encodedDatasets["labels_train"]
 
-
     model = TFCamembertForSequenceClassification.from_pretrained("jplu/tf-camembert-base")
 
     opt = tf.keras.optimizers.Adam(learning_rate=5e-6, epsilon=1e-08)
@@ -122,3 +121,4 @@ def TrainModel(request):
     history = model.fit(reviews, labels, epochs=1, batch_size=4, verbose=1)
     memory.dump(history, model_storage + "history.z")
     return JsonResponse({"message": "done"})
+
