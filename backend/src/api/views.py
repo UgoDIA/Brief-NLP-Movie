@@ -129,8 +129,8 @@ def TrainModel(request):
 
 @api_view(['POST'])
 def predict(request):
-    print("Review id:", review_id)
     review_id = request.data.get("review_id")
+    print("Review id:", review_id)
 
     review = Reviews.objects.get(id_review = review_id)
     print("review: ", review)
