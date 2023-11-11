@@ -103,10 +103,11 @@ def TrainModel(request):
     labels  = encodedDatasets["labels_train"]
 
     model = TFCamembertForSequenceClassification.from_pretrained("jplu/tf-camembert-base")
-
+    print("load optimizer")
     opt = tf.keras.optimizers.Adam(learning_rate=5e-6, epsilon=1e-08)
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)    
 
+    print("compile model")
     model.compile(optimizer=opt, loss=loss_fn, metrics=['accuracy'])
 
     # ! REVIEW to get test & validation sets
@@ -119,8 +120,11 @@ def TrainModel(request):
     print('labels on train:', labels.shape)
 
     history = model.fit(reviews, labels, epochs=1, batch_size=4, verbose=1)
+
+    print("memory model")
     memory.dump(history, model_storage + "history.z")
     memory.dump(model,  model_storage + "trainedModel.z")
+    print("end train")
     return JsonResponse({"message": "done"})
 
 @api_view(['POST'])
