@@ -39,7 +39,6 @@ def generateTrainTest(request):
     ProcessDatasets()
     return JsonResponse({"trainset": serializedTrainReview, "testset": serializedTestReview},  safe=True)
 
-
 def ProcessDatasets():
     # TODO: same for testset
     trainset = pd.read_csv(data_storage + 'Trainset.csv')
@@ -72,8 +71,6 @@ def readTokenizedEncodedReviews(request):
     print(datas)
     return JsonResponse({"message": "done"})
 
-
-
 @api_view(['GET'])
 def compileModel(request):
     model = TFCamembertForSequenceClassification.from_pretrained("jplu/tf-camembert-base")
@@ -88,7 +85,6 @@ def compileModel(request):
     memory.dump(modelSummary, model_storage + "modelSummary.z")
 
     return JsonResponse({"message": "done"})
-
 
 @api_view(['GET'])
 def TrainModel(request):
