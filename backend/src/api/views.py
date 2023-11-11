@@ -120,5 +120,19 @@ def TrainModel(request):
 
     history = model.fit(reviews, labels, epochs=1, batch_size=4, verbose=1)
     memory.dump(history, model_storage + "history.z")
+    memory.dump(model,  model_storage + "trainedModel.z")
     return JsonResponse({"message": "done"})
 
+@api_view(['POST'])
+def predict(request):
+    review_id = request.data.get("review_id")
+    print("Review id:", review_id)
+
+    review = Reviews.objects.get(id_review = review_id)
+    print("review: ", review)
+
+    model = memory.load(model_storage + "trainedModel.z")
+    scores = model.predict()
+    y_pred = np.argmax(scores, axis=1)
+
+    return JsonResponse({"prediction": y_pred})

@@ -21,6 +21,7 @@ from api.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('train-model/', TrainModel, name="train-model"),
+    path('predict/', predict, name="predict"),
     path('compile-model/', compileModel, name="compile-model"),
     path('generate-dataset/', generateTrainTest, name="generate-dataset"),
     path('process-dataset/', ProcessDatasets, name="process-dataset"),
