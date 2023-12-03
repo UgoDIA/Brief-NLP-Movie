@@ -67,7 +67,8 @@ ROOT_URLCONF = 'NLP_app.urls'
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'https://nlp-movies.azurewebsites.net'
+    'https://nlp-movies.azurewebsites.net',
+    'http://movie-nlp.lelu0920.odns.fr'
 ]
 
 TEMPLATES = [
