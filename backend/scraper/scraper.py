@@ -93,8 +93,8 @@ def scrape_reviews(id_movie):
             
             df_reviews.loc[len(df_reviews)] = [score, content, id_movie]   
 
-with engine.connect() as connection:
-    connection.execute("TRUNCATE movies RESTART IDENTITY CASCADE")
+# with engine.connect() as connection:
+#     connection.execute("TRUNCATE movies RESTART IDENTITY CASCADE")
 
 pages = 2
 for page_num in range(1, pages + 1):

@@ -6,6 +6,7 @@ cachetools==5.3.2
 certifi==2023.7.22
 charset-normalizer==3.3.1
 Django==4.2.6
+django-cors-headers==4.3.1
 djangorestframework==3.14.0
 filelock==3.13.1
 flatbuffers==23.5.26

@@ -3,6 +3,8 @@ from rest_framework.decorators import api_view
 from transformers import CamembertTokenizer
 from django.http import JsonResponse
 from api.models import *
+from rest_framework.response import Response
+from .serializers import *
 import tensorflow as tf
 import joblib as memory
 import pandas as pd
@@ -136,3 +138,9 @@ def predict(request):
     y_pred = np.argmax(scores, axis=1)
 
     return JsonResponse({"prediction": y_pred})
+
+@api_view(['GET'])
+def getMovies(request):
+    data=Movies.objects.all()
+    serializer=MoviesSerializer(data, many=True)
+    return Response(serializer.data)

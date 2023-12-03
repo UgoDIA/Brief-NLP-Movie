@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'NLP_app',
     'api',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -58,9 +59,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'NLP_app.urls'
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'https://nlp-movies.azurewebsites.net'
+]
 
 TEMPLATES = [
     {

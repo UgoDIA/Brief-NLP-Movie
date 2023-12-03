@@ -25,5 +25,6 @@ urlpatterns = [
     path('compile-model/', compileModel, name="compile-model"),
     path('generate-dataset/', generateTrainTest, name="generate-dataset"),
     path('process-dataset/', ProcessDatasets, name="process-dataset"),
-    path('read-tokenized-reviews/', readTokenizedEncodedReviews, name="read-tokenized-reviews")
+    path('read-tokenized-reviews/', readTokenizedEncodedReviews, name="read-tokenized-reviews"),
+    path('get-movies/', getMovies, name="get-movies")
 ]

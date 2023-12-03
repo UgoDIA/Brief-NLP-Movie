@@ -9,6 +9,8 @@ class Movies(models.Model):
     movie_score_spectator = models.DecimalField(max_digits=2, decimal_places=1)
     nlp_score = models.DecimalField(db_column='NLP_score', max_digits=2, decimal_places=1, blank=True, null=True)
     nlp_rank = models.IntegerField(db_column='NLP_rank', blank=True, null=True)
+    nlp_score_bert = models.DecimalField(db_column='NLP_score_bert', max_digits=4, decimal_places=3, blank=True, null=True)
+    nlp_rank_bert = models.IntegerField(db_column='NLP_rank_bert', blank=True, null=True)
     
     class Meta:
         db_table = 'movies'
@@ -20,6 +22,7 @@ class Reviews(models.Model):
     review_content = models.TextField(blank=True, null=True)
     # polarity = models.IntegerField(blank=True, null=True)
     id_movie = models.ForeignKey(Movies, models.CASCADE, db_column='id_movie')
+    new_review_score_bert = models.DecimalField(max_digits=2, decimal_places=1,blank=True, null=True)
 
     class Meta:
         db_table = 'reviews'
